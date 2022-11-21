@@ -1,0 +1,134 @@
+# Books table
+booksTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    AttributeDefinitions:
+      - AttributeName: "bookId"
+        AttributeType: "S"
+    BillingMode: PAY_PER_REQUEST
+    KeySchema:
+      - AttributeName: "bookId"
+        KeyType: "HASH"
+    Tags:
+      - Key: Name
+        Value: books-table
+# Order table
+orderTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    AttributeDefinitions:
+      - AttributeName: "userId"
+        AttributeType: "S"
+      - AttributeName: "orderId"
+        AttributeType: "S"
+      - AttributeName: "bookId"
+        AttributeType: "S"
+      - AttributeName: "createdAt"
+        AttributeType: "S"
+    BillingMode: PAY_PER_REQUEST
+    KeySchema:
+      - AttributeName: "userId"
+        KeyType: "HASH"
+      - AttributeName: "orderId"
+        KeyType: "RANGE"
+    GlobalSecondaryIndexes:
+      - IndexName: "byOrder"
+        KeySchema:
+          - AttributeName: "bookId"
+            KeyType: "HASH"
+          - AttributeName: "createdAt"
+            KeyType: "RANGE"
+        Projection:
+          ProjectionType: ALL
+    Tags:
+      - Key: Name
+        Value: order-table
+# cognito user pool
+cognitoUserPool:
+  Type: AWS::Cognito::UserPool
+  Properties:
+    UsernameAttributes:
+      - email
+    UserPoolName: "bookStoreUserPool"
+# cognito user pool client
+cognitoUserPoolClient:
+  Type: AWS::Cognito::UserPoolClient
+  Properties:
+    ClientName: web
+    UserPoolId: !Ref cognitoUserPool
+# cognito user pool admin group
+cognitoAdminGroup:
+  Type: AWS::Cognito::UserPoolGroup
+  Properties:
+    Description: "Admin users belongs to this group"
+    GroupName: "Admin"
+    Precedence: 0
+    RoleArn: !GetAtt cognitoAdminIAMRole.Arn
+    UserPoolId: !Ref cognitoUserPool
+# cognito Admin I AM Role for Admin user
+cognitoAdminIAMRole:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Effect: Allow
+          Principal:
+            Federated:
+              - "cognito-identity.amazonaws.com"
+          Action:
+            - "sts:AssumeRoleWithWebIdentity"
+    Description: "This is the I AM role that Admin user group assume"
+    Policies:
+      - PolicyName: "bookstore-admin-group-policy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource:
+                - !GetAtt booksTable.Arn
+                - !GetAtt orderTable.Arn
+    RoleName: "bookstore-admin-role"
+# cognito user pool customer group
+cognitoCustomerGroup:
+  Type: AWS::Cognito::UserPoolGroup
+  Properties:
+    Description: "Customer users belongs to this group"
+    GroupName: "Customer"
+    Precedence: 1
+    RoleArn: !GetAtt cognitoCustomerIAMRole.Arn
+    UserPoolId: !Ref cognitoUserPool
+# cognito Admin I AM Role for Admin user
+cognitoCustomerIAMRole:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Effect: Allow
+          Principal:
+            Federated:
+              - "cognito-identity.amazonaws.com"
+          Action:
+            - "sts:AssumeRoleWithWebIdentity"
+    Description: "This is the I AM role that Customer user group assume"
+    Policies:
+      - PolicyName: "bookstore-customer-group-policy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource:
+                - !GetAtt orderTable.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:Query"
+                - "dynamodb:BatchGetItem"
+              Resource:
+                - !GetAtt booksTable.Arn
+    RoleName: "bookstore-customer-role"

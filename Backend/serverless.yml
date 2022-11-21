@@ -1,0 +1,36 @@
+service: sls-appsync-bookstore
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  stage: dev
+  region: ap-southeast-1
+plugins:
+  - serverless-appsync-plugin
+custom:
+  appSync:
+    name: bookStoreAppSyncApi
+    authenticationType: AMAZON_COGNITO_USER_POOLS
+    userPoolConfig:
+      awsRegion: ap-southeast-1
+      defaultAction: ALLOW
+      userPoolId: !Ref cognitoUserPool
+    mappingTemplatesLocation: mapping-templates
+    mappingTemplates:
+      - type: Query
+        field: getBookById
+        dataSource: booksTable
+      - type: Mutation
+        field: createBook
+        dataSource: booksTable
+    dataSources:
+      - type: AMAZON_DYNAMODB
+        name: booksTable
+        config:
+          tableName: !Ref booksTable
+
+# add cloudformation resources here
+resources:
+  Resources: ${file(resources.yml)}
