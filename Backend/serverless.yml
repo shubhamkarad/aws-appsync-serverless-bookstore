@@ -13,6 +13,8 @@ custom:
   appSync:
     name: bookStoreAppSyncApi
     authenticationType: AMAZON_COGNITO_USER_POOLS
+    additionalAuthenticationProviders:
+      - authenticationType: AWS_IAM
     userPoolConfig:
       awsRegion: ap-southeast-1
       defaultAction: ALLOW
@@ -21,6 +23,9 @@ custom:
     mappingTemplates:
       - type: Query
         field: getBookById
+        dataSource: booksTable
+      - type: Query
+        field: listBooks
         dataSource: booksTable
       - type: Mutation
         field: createBook

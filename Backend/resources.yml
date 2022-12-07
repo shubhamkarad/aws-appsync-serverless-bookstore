@@ -5,10 +5,21 @@ booksTable:
     AttributeDefinitions:
       - AttributeName: "bookId"
         AttributeType: "S"
+      - AttributeName: "title"
+        AttributeType: "S"
     BillingMode: PAY_PER_REQUEST
     KeySchema:
       - AttributeName: "bookId"
         KeyType: "HASH"
+    GlobalSecondaryIndexes:
+      - IndexName: byTitle
+        KeySchema:
+          - AttributeName: "title"
+            KeyType: "HASH"
+          - AttributeName: "bookId"
+            KeyType: "RANGE"
+        Projection:
+          ProjectionType: ALL
     Tags:
       - Key: Name
         Value: books-table
@@ -132,3 +143,47 @@ cognitoCustomerIAMRole:
               Resource:
                 - !GetAtt booksTable.Arn
     RoleName: "bookstore-customer-role"
+
+# cognito Auth I AM Role for Admin user
+cognitoUnauthIAMRole:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Effect: Allow
+          Principal:
+            Federated:
+              - "cognito-identity.amazonaws.com"
+          Action:
+            - "sts:AssumeRoleWithWebIdentity"
+    Description: "This is the I AM role that un auth user  assume"
+    Policies:
+      - PolicyName: "bookstore-unauth-user-policy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "appsync:GraphQL"
+              Resource:
+                - "arn:aws:appsync:ap-southeast-1:344269040775:apis/ixpp7oug4zcu5haf67dfia36hi/types/Query/fields/getBookById"
+                - "arn:aws:appsync:ap-southeast-1:344269040775:apis/ixpp7oug4zcu5haf67dfia36hi/types/Mutation/fields/createBook"
+                - "arn:aws:appsync:ap-southeast-1:344269040775:apis/ixpp7oug4zcu5haf67dfia36hi/types/Query/fields/listBooks"
+    RoleName: "bookstore-unauth-role"
+
+cognitoIdentityPoolRoleAttachment:
+  Type: AWS::Cognito::IdentityPoolRoleAttachment
+  Properties:
+    IdentityPoolId: !Ref cognitoIdentityPool
+    Roles:
+      unauthenticated: !GetAtt cognitoUnauthIAMRole.Arn
+
+cognitoIdentityPool:
+  Type: AWS::Cognito::IdentityPool
+  Properties:
+    AllowUnauthenticatedIdentities: true
+    CognitoIdentityProviders:
+      - ClientId: !Ref cognitoUserPoolClient
+        ProviderName: !GetAtt cognitoUserPool.ProviderName
+    IdentityPoolName: bookStoreIdentityPool
