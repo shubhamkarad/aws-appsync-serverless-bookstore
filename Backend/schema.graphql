@@ -1,12 +1,21 @@
 schema {
   query: Query
   mutation: Mutation
+  subscription: Subscription
 }
 
 type Query {
   getBookById(bookId: String!): Book! @aws_iam
+  getRegistrationsById(bookingId: String!, name: String): Registrations!
+    @aws_iam
   listBooks(limit: Int!, nextToken: String): BooksPage! @aws_iam
+  listRegistrations(limit: Int!, nextToken: String): RegistrationsPage! @aws_iam
   myOrders(limit: Int!, nextToken: String): [OrderItemsPage]
+}
+type Subscription {
+  onCreateBook: Book @aws_subscribe(mutations: ["createBook"])
+  onCreateRegistrations: Registrations
+    @aws_subscribe(mutations: ["createRegistrations"])
 }
 type OrderItemsPage {
   orderItems: [OrderItem]
@@ -22,6 +31,10 @@ type BooksPage @aws_iam {
   books: [Book]
   nextToken: String
 }
+type RegistrationsPage @aws_iam {
+  registrationss: [Registrations]
+  nextToken: String
+}
 type Book @aws_iam @aws_cognito_user_pools {
   bookId: ID!
   title: String
@@ -32,8 +45,20 @@ type Book @aws_iam @aws_cognito_user_pools {
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 }
+type Registrations @aws_iam @aws_cognito_user_pools {
+  id: ID
+  bookingId: String!
+  phoneNumber: String
+  emailId: String!
+  name: String!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
 type Mutation {
   createBook(newBook: BookInput): Book!
+    @aws_iam
+    @aws_auth(cognito_groups: ["Admin"])
+  createRegistrations(newRegistration: registrationInput): Registrations!
     @aws_iam
     @aws_auth(cognito_groups: ["Admin"])
   createOrder(newOrder: OrderInput): Boolean!
@@ -51,4 +76,10 @@ input BookInput {
   imageUrl: AWSURL
   author: String!
   price: Float!
+}
+input registrationInput {
+  name: String!
+  bookingId: String!
+  phoneNumber: String!
+  emailId: String
 }

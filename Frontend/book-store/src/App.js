@@ -2,7 +2,12 @@ import "./App.css";
 import { Amplify, API, graphqlOperation } from "aws-amplify";
 import { AmplifyAuthenticator, AmplifySignOut } from "@aws-amplify/ui-react";
 import { getBookById, createBook, listBooks } from "./graphql/queries/book";
+import { onCreateBook } from "./graphql/subscriptions/subscriptions";
 import React, { useEffect, useState } from "react";
+// import { toast } from "react-toastify";
+// import "react-toastify/dist/ReactToastify.css";
+
+// toast.configure();
 function App() {
   const [book, setBook] = useState(null);
   const [title, setTitle] = useState("");
@@ -12,10 +17,18 @@ function App() {
   const [books, setBookDetails] = useState("");
   useEffect(() => {
     console.log(books);
+    const subscription = API.graphql(graphqlOperation(onCreateBook)).subscribe({
+      next: (result) => {
+        console.log(result);
+        // toast("New book added");
+        const newBook = result.value.data.onCreateBook;
+        setBook(newBook);
+      },
+    });
     const fetchBooks = async () => {
       await API.graphql({
         query: listBooks,
-        variables: { limit: 5 },
+        variables: { limit: 30 },
         authMode: "AWS_IAM",
       }).then((res) => {
         console.log("res", res);

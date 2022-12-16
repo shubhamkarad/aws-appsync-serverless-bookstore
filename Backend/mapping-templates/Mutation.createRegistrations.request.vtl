@@ -1,0 +1,15 @@
+{
+    "version" : "2017-02-28",
+    "operation" : "PutItem",
+    "key": {
+        "bookingId" : $util.dynamodb.toDynamoDBJson($ctx.args.newRegistration.bookingId)
+    },
+    "attributeValues" : {
+        "Id" : $util.dynamodb.toDynamoDBJson($util.autoId()),
+        "name"    : $util.dynamodb.toDynamoDBJson($ctx.args.newRegistration.name),
+        "phoneNumber" : $util.dynamodb.toDynamoDBJson($ctx.args.newRegistration.phoneNumber),
+        "emailId" : $util.dynamodb.toDynamoDBJson($ctx.args.newRegistration.emailId),
+        "createdAt" : $util.dynamodb.toDynamoDBJson($util.time.nowISO8601()),
+        "updatedAt" : $util.dynamodb.toDynamoDBJson($util.time.nowISO8601()),
+    }
+}   

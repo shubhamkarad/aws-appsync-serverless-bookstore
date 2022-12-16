@@ -1,0 +1,9 @@
+{
+    "version" : "2017-02-28",
+    "operation" : "GetItem",
+    "key" : {
+        "bookingId" : $util.dynamodb.toDynamoDBJson($ctx.args.bookingId),
+        "name" : $util.dynamodb.toDynamoDBJson($ctx.args.name)
+    },
+    "consistentRead" : true
+}

@@ -23,6 +23,24 @@ booksTable:
     Tags:
       - Key: Name
         Value: books-table
+# registrations table
+registrationsTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    AttributeDefinitions:
+      - AttributeName: "bookingId"
+        AttributeType: "S"
+      - AttributeName: "name"
+        AttributeType: "S"
+    BillingMode: PAY_PER_REQUEST
+    KeySchema:
+      - AttributeName: "bookingId"
+        KeyType: "HASH"
+      - AttributeName: "name"
+        KeyType: "RANGE"
+    Tags:
+      - Key: Name
+        Value: registrations-table
 # Order table
 orderTable:
   Type: AWS::DynamoDB::Table
@@ -100,6 +118,7 @@ cognitoAdminIAMRole:
                 - "dynamodb:*"
               Resource:
                 - !GetAtt booksTable.Arn
+                - !GetAtt registrationsTable.Arn
                 - !GetAtt orderTable.Arn
     RoleName: "bookstore-admin-role"
 # cognito user pool customer group
@@ -142,6 +161,7 @@ cognitoCustomerIAMRole:
                 - "dynamodb:BatchGetItem"
               Resource:
                 - !GetAtt booksTable.Arn
+                - !GetAtt registrationsTable.Arn
     RoleName: "bookstore-customer-role"
 
 # cognito Auth I AM Role for Admin user

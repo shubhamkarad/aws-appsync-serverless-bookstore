@@ -25,16 +25,29 @@ custom:
         field: getBookById
         dataSource: booksTable
       - type: Query
+        field: getRegistrationsById
+        dataSource: registrationsTable
+      - type: Query
         field: listBooks
         dataSource: booksTable
+      - type: Query
+        field: listRegistrations
+        dataSource: registrationsTable
       - type: Mutation
         field: createBook
         dataSource: booksTable
+      - type: Mutation
+        field: createRegistrations
+        dataSource: registrationsTable
     dataSources:
       - type: AMAZON_DYNAMODB
         name: booksTable
         config:
           tableName: !Ref booksTable
+      - type: AMAZON_DYNAMODB
+        name: registrationsTable
+        config:
+          tableName: !Ref registrationsTable
 
 # add cloudformation resources here
 resources:
